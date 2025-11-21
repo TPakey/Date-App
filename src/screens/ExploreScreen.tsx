@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ActivityIndicator, Modal, Alert } from 'react-native';
-import MapView, { PROVIDER_GOOGLE, Region, Marker, Callout } from 'react-native-maps';
+import { View, StyleSheet, ActivityIndicator, Modal, Alert, Text, ScrollView, TouchableOpacity } from 'react-native';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { getCurrentLocation } from '../services/location';
 import { StorageService } from '../services/storage';
@@ -10,13 +9,16 @@ import { FilterModal } from '../components/FilterModal';
 import { PlaceDetailSheet } from '../components/PlaceDetailSheet';
 
 export const ExploreScreen = () => {
-    const [region, setRegion] = useState<Region | null>(null);
+    const [region, setRegion] = useState<any | null>(null);
     const [loading, setLoading] = useState(true);
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const [places, setPlaces] = useState<Place[]>([]);
     const [showFilters, setShowFilters] = useState(false);
     const [selectedPlace, setSelectedPlace] = useState<Place | null>(null);
     const [activeFilters, setActiveFilters] = useState<any>({ radius: 5 });
+    const [MapViewModule, setMapViewModule] = useState<any | null>(null);
+    const [MarkerModule, setMarkerModule] = useState<any | null>(null);
+    const [CalloutModule, setCalloutModule] = useState<any | null>(null);
 
     useEffect(() => {
         const initLocation = async () => {
@@ -34,6 +36,33 @@ export const ExploreScreen = () => {
         };
 
         initLocation();
+    }, []);
+
+    // Lazy-load the optional native maps module after mount so Metro/Expo
+    // doesn't attempt to initialize a missing native TurboModule at import time.
+    useEffect(() => {
+        let mounted = true;
+        const tryRequire = () => {
+            try {
+                // eslint-disable-next-line @typescript-eslint/no-var-requires
+                const maps = require('react-native-maps');
+                if (!mounted) return;
+                const MV = maps.default || maps;
+                setMapViewModule(MV);
+                setMarkerModule(maps.Marker || MV.Marker || null);
+                setCalloutModule(maps.Callout || MV.Callout || null);
+            } catch (e) {
+                // Leave modules null; fallback UI will show. Do not throw.
+                if (!mounted) return;
+                setMapViewModule(null);
+                setMarkerModule(null);
+                setCalloutModule(null);
+            }
+        };
+
+        tryRequire();
+
+        return () => { mounted = false; };
     }, []);
 
     const loadPlaces = async (lat: number, lng: number, category?: string) => {
@@ -112,37 +141,74 @@ export const ExploreScreen = () => {
 
     return (
         <View style={styles.container}>
-            <MapView
-                style={styles.map}
-                showsUserLocation
-                showsMyLocationButton
-                initialRegion={region || undefined}
-                onPress={() => setSelectedPlace(null)}
-            >
-                {places.map((place) => (
-                    <Marker
-                        key={place.id}
-                        coordinate={{
-                            latitude: place.geometry.location.lat,
-                            longitude: place.geometry.location.lng,
-                        }}
-                        title={place.name}
-                        description={place.vicinity}
-                        pinColor={getPinColor(place)}
-                        onPress={() => setSelectedPlace(place)}
-                    >
-                        <Callout tooltip>
-                            <View style={{ padding: 6 }}>
-                                <View style={{ maxWidth: 220 }}>
-                                    <View>
-                                        {/* small preview inside callout */}
+            {MapViewModule ? (
+                <MapViewModule
+                    style={styles.map}
+                    showsUserLocation
+                    showsMyLocationButton
+                    initialRegion={region || undefined}
+                    onPress={() => setSelectedPlace(null)}
+                >
+                    {places.map((place) => (
+                        <MarkerModule
+                            key={place.id}
+                            coordinate={{
+                                latitude: place.geometry.location.lat,
+                                longitude: place.geometry.location.lng,
+                            }}
+                            title={place.name}
+                            description={place.vicinity}
+                            pinColor={getPinColor(place)}
+                            onPress={() => setSelectedPlace(place)}
+                        >
+                            <CalloutModule tooltip>
+                                <View style={{ padding: 6 }}>
+                                    <View style={{ maxWidth: 220 }}>
+                                        <View>
+                                            {/* small preview inside callout */}
+                                        </View>
                                     </View>
                                 </View>
-                            </View>
-                        </Callout>
-                    </Marker>
-                ))}
-            </MapView>
+                            </CalloutModule>
+                        </MarkerModule>
+                    ))}
+                </MapViewModule>
+            ) : (
+                <View style={styles.fallbackContainer}>
+                    <Text style={styles.fallbackTitle}>Map not available</Text>
+                    <Text style={styles.fallbackText}>
+                        Map view is temporarily unavailable in this build. You can still browse date ideas and tap places below.
+                    </Text>
+
+                    <TouchableOpacity style={{ marginTop: 10 }} onPress={() => {
+                        // attempt to re-require the module
+                        try {
+                            // eslint-disable-next-line @typescript-eslint/no-var-requires
+                            const maps = require('react-native-maps');
+                            const MV = maps.default || maps;
+                            setMapViewModule(MV);
+                            setMarkerModule(maps.Marker || MV.Marker || null);
+                            setCalloutModule(maps.Callout || MV.Callout || null);
+                        } catch (e) {
+                            // keep null and show the fallback
+                            setMapViewModule(null);
+                        }
+                    }}>
+                        <View style={{ paddingHorizontal: 12, paddingVertical: 8, backgroundColor: COLORS.primary, borderRadius: 8 }}>
+                            <Text style={{ color: '#fff', fontWeight: '600' }}>Try maps again</Text>
+                        </View>
+                    </TouchableOpacity>
+
+                    <ScrollView style={{ marginTop: 12, width: '100%' }}>
+                        {places.map((p) => (
+                            <TouchableOpacity key={p.id} style={styles.placeRow} onPress={() => setSelectedPlace(p)}>
+                                <Text style={styles.placeName}>{p.name}</Text>
+                                <Text style={styles.placeVicinity}>{p.vicinity}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                </View>
+            )}
 
             {!loading && places.length === 0 && (
                 <View style={styles.emptyState} pointerEvents="box-none">
@@ -245,5 +311,37 @@ const styles = StyleSheet.create({
         fontSize: 14,
         color: COLORS.textSecondary,
         textAlign: 'center',
+    },
+    fallbackContainer: {
+        flex: 1,
+        alignItems: 'center',
+        padding: SPACING.m,
+        backgroundColor: COLORS.background,
+    },
+    fallbackTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: COLORS.text,
+    },
+    fallbackText: {
+        fontSize: 14,
+        color: COLORS.textSecondary,
+        textAlign: 'center',
+        marginTop: SPACING.s,
+    },
+    placeRow: {
+        paddingVertical: SPACING.s,
+        paddingHorizontal: SPACING.m,
+        borderBottomWidth: 1,
+        borderBottomColor: '#EEE',
+    },
+    placeName: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: COLORS.text,
+    },
+    placeVicinity: {
+        fontSize: 13,
+        color: COLORS.textSecondary,
     },
 });
