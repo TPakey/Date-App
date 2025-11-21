@@ -357,3 +357,26 @@ export const MOCK_IDEAS = [
         duration: '2 hours',
     }
 ];
+
+// Expose simple helpers for runtime configuration checks
+export const isUsingMock = () => {
+    return USE_MOCK_API || !API_URL || API_URL === '' || API_URL.includes('your-vercel-project');
+};
+
+export const getBackendConfigStatus = () => {
+    // If using mock, treat as OK (explicit offline mode)
+    if (isUsingMock()) return { ok: true, mode: 'mock', message: 'Using mock/offline mode' };
+
+    const issues: string[] = [];
+    if (!API_URL || API_URL === '' || API_URL.includes('your-vercel-project')) {
+        issues.push('API_URL is missing or still the placeholder');
+    }
+
+    // We cannot detect server-side secrets (like OPENAI_API_KEY) from the client safely.
+    // Add a gentle reminder for the developer instead.
+    if (issues.length > 0) {
+        return { ok: false, issues, message: 'Backend appears misconfigured' };
+    }
+
+    return { ok: true, mode: 'real', message: 'Backend configured' };
+};
