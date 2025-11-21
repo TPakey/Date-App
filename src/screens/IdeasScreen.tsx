@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { CategoryChip } from '../components/CategoryChip';
-import { generateDateIdeas, fetchPlaces, Place } from '../services/api';
+import { generateDateIdeas, fetchPlaces, Place, MOCK_IDEAS } from '../services/api';
 import { getCurrentLocation } from '../services/location';
 import { StorageService } from '../services/storage';
 import { Sparkles, Clock, DollarSign, MapPin } from 'lucide-react-native';
@@ -19,6 +19,18 @@ export const IdeasScreen = () => {
     const [selectedDuration, setSelectedDuration] = useState<string | null>(null);
     const [selectedBudget, setSelectedBudget] = useState<string | null>(null);
 
+    useEffect(() => {
+        const loadDefaults = async () => {
+            const prefs = await StorageService.getPreferences();
+            if (prefs) {
+                if (prefs.defaultMood) setSelectedMood(prefs.defaultMood);
+                if (prefs.defaultBudget) setSelectedBudget(prefs.defaultBudget);
+                // no duration saved by prefs currently
+            }
+        };
+        loadDefaults();
+    }, []);
+
     const handleGenerate = async () => {
         if (!selectedMood || !selectedDuration || !selectedBudget) {
             Alert.alert('Missing filters', 'Please select a mood, duration, and budget.');
@@ -33,8 +45,12 @@ export const IdeasScreen = () => {
                 return;
             }
 
-            // 1. Fetch candidate places
-            const places = await fetchPlaces(location.latitude, location.longitude, 5000, 'restaurant'); // Simplified for V1
+            // get user radius preference if available
+            const prefs = await StorageService.getPreferences();
+            const radius = (prefs && prefs.radius) ? prefs.radius * 1000 : 5000;
+
+            // 1. Fetch candidate places (type could be extended with category)
+            const places = await fetchPlaces(location.latitude, location.longitude, radius, 'restaurant');
 
             // 2. Generate ideas
             const generatedIdeas = await generateDateIdeas(places, {
@@ -45,7 +61,9 @@ export const IdeasScreen = () => {
 
             setIdeas(generatedIdeas);
         } catch (error) {
-            Alert.alert('Error', 'Failed to generate ideas. Please try again.');
+            console.error('Ideas generation failed:', error);
+            Alert.alert('AI error', 'Could not generate ideas from the AI service. Showing fallback suggestions.');
+            setIdeas(MOCK_IDEAS);
         } finally {
             setLoading(false);
         }
@@ -102,6 +120,8 @@ export const IdeasScreen = () => {
                     style={styles.generateButton}
                     onPress={handleGenerate}
                     disabled={loading}
+                    accessibilityLabel="Generate date ideas"
+                    accessibilityRole="button"
                 >
                     {loading ? (
                         <ActivityIndicator color="#FFF" />

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { SlidersHorizontal } from 'lucide-react-native';
+import { SlidersHorizontal, RotateCw } from 'lucide-react-native';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { CategoryChip } from './CategoryChip';
 
@@ -16,14 +16,31 @@ interface FilterBarProps {
     selectedCategory: string | null;
     onSelectCategory: (category: string | null) => void;
     onOpenFilters: () => void;
+    onRefresh?: () => void;
 }
 
 export const FilterBar = ({ selectedCategory, onSelectCategory, onOpenFilters }: FilterBarProps) => {
     return (
         <View style={styles.container}>
             <View style={styles.row}>
-                <TouchableOpacity style={styles.filterButton} onPress={onOpenFilters}>
+                <TouchableOpacity
+                    style={styles.filterButton}
+                    onPress={onOpenFilters}
+                    accessibilityLabel="Open filters"
+                    accessibilityRole="button"
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
                     <SlidersHorizontal size={20} color={COLORS.text} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={[styles.filterButton, { marginRight: 8 }]}
+                    onPress={onRefresh}
+                    accessibilityLabel="Refresh places"
+                    accessibilityRole="button"
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                    <RotateCw size={20} color={COLORS.text} />
                 </TouchableOpacity>
 
                 <ScrollView

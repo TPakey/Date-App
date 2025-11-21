@@ -24,15 +24,21 @@ export const ProfileScreen = () => {
             setRadius(prefs.radius);
             setDefaultMood(prefs.defaultMood || null);
             setDefaultBudget(prefs.defaultBudget || null);
+            setUseMiles(!!prefs.useMiles);
+            setWeatherEnabled(prefs.weatherEnabled === undefined ? true : !!prefs.weatherEnabled);
         }
     };
 
     const savePreferences = async () => {
-        await StorageService.savePreferences({
+        const prefs: UserPreferences = {
             radius,
             defaultMood: defaultMood || undefined,
             defaultBudget: defaultBudget || undefined,
-        });
+            useMiles,
+            weatherEnabled,
+        };
+
+        await StorageService.savePreferences(prefs);
         Alert.alert('Saved', 'Your preferences have been updated.');
     };
 

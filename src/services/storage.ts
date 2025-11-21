@@ -14,6 +14,9 @@ export interface UserPreferences {
     radius: number;
     defaultMood?: string;
     defaultBudget?: string;
+    useMiles?: boolean;
+    weatherEnabled?: boolean;
+    defaultCategories?: string[];
 }
 
 const KEYS = {

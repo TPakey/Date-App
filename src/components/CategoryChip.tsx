@@ -19,6 +19,10 @@ export const CategoryChip = ({ label, selected, onPress, color = COLORS.primary 
             ]}
             onPress={onPress}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityState={{ selected: !!selected }}
+            accessibilityLabel={label}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
             <Text
                 style={[
