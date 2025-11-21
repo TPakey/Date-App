@@ -1,0 +1,16 @@
+{
+    "name": "date-ideas-backend",
+    "version": "1.0.0",
+    "description": "Serverless proxy for Date Ideas App",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "@vercel/node": "^3.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.0.0",
+        "typescript": "^5.0.0"
+    }
+}
