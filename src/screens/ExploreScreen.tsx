@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Modal, Alert } from 'react-native';
 import MapView, { PROVIDER_GOOGLE, Region, Marker, Callout } from 'react-native-maps';
-import { COLORS } from '../constants/theme';
+import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { getCurrentLocation } from '../services/location';
 import { StorageService } from '../services/storage';
 import { FilterBar } from '../components/FilterBar';
@@ -144,6 +144,15 @@ export const ExploreScreen = () => {
                 ))}
             </MapView>
 
+            {!loading && places.length === 0 && (
+                <View style={styles.emptyState} pointerEvents="box-none">
+                    <View style={styles.emptyCard}>
+                        <Text style={styles.emptyTitle}>No places match your filters yet</Text>
+                        <Text style={styles.emptyText}>Try relaxing your filters or increasing the search radius.</Text>
+                    </View>
+                </View>
+            )}
+
             {loading && region && (
                 <View style={styles.smallLoading} pointerEvents="none">
                     <ActivityIndicator size="small" color="#FFF" />
@@ -211,5 +220,30 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 4,
         elevation: 4,
+    },
+    emptyState: {
+        position: 'absolute',
+        left: 20,
+        right: 20,
+        top: '40%',
+        alignItems: 'center',
+    },
+    emptyCard: {
+        backgroundColor: COLORS.card,
+        padding: 16,
+        borderRadius: 12,
+        ...SHADOWS.light,
+        alignItems: 'center',
+    },
+    emptyTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: COLORS.text,
+        marginBottom: 6,
+    },
+    emptyText: {
+        fontSize: 14,
+        color: COLORS.textSecondary,
+        textAlign: 'center',
     },
 });

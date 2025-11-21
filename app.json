@@ -28,7 +28,7 @@
       "predictiveBackGestureEnabled": false
     },
     "extra": {
-      "API_URL": "https://your-vercel-project.vercel.app/api"
+      "API_URL": ""
     },
     "web": {
       "favicon": "./assets/favicon.png"

@@ -1,14 +1,17 @@
 import { Alert } from 'react-native';
 import Constants from 'expo-constants';
 
-// API URL resolution order:
+// Toggle mock/offline mode here. When true, the app will NEVER call network APIs.
+const USE_MOCK_API = true;
+
+// API URL resolution order (kept for future real-backend usage):
 // 1. `Constants.expoConfig.extra.API_URL` (recommended via app config / EAS)
 // 2. `process.env.EXPO_PUBLIC_API_URL` (if using env replacement)
-// 3. fallback placeholder (app will use mock data when placeholder is present)
+// 3. fallback placeholder
 const API_URL =
     (Constants?.expoConfig as any)?.extra?.API_URL ||
     process.env?.EXPO_PUBLIC_API_URL ||
-    'https://your-vercel-project.vercel.app/api';
+    '';
 
 export interface Place {
     id: string;
@@ -30,51 +33,134 @@ export interface Place {
     };
 }
 
-// Mock data for testing without backend
+// Mock data for offline mode: centered around Berlin (52.5200, 13.4050)
 const MOCK_PLACES: Place[] = [
     {
-        id: '1',
-        name: 'The Cozy Corner',
-        rating: 4.5,
-        user_ratings_total: 120,
-        price_level: 2,
-        vicinity: '123 Main St, Cityville',
-        geometry: { location: { lat: 37.78825, lng: -122.4324 } },
+        id: 'ber-1',
+        name: 'Café Himmel',
+        rating: 4.6,
+        user_ratings_total: 210,
+        price_level: 1,
+        vicinity: 'Mitte, Berlin',
+        geometry: { location: { lat: 52.5208, lng: 13.4045 } },
         photos: [],
-        types: ['restaurant', 'food'],
+        types: ['cafe', 'food'],
         opening_hours: { open_now: true },
     },
     {
-        id: '2',
-        name: 'Sunset Park',
+        id: 'ber-2',
+        name: 'Riverside Walkway',
         rating: 4.8,
-        user_ratings_total: 300,
+        user_ratings_total: 150,
         price_level: 0,
-        vicinity: '456 Park Ave, Cityville',
-        geometry: { location: { lat: 37.78925, lng: -122.4344 } },
+        vicinity: 'Spreeufer, Berlin',
+        geometry: { location: { lat: 52.5189, lng: 13.4062 } },
         photos: [],
-        types: ['park', 'point_of_interest'],
+        types: ['park', 'walk', 'nature'],
         opening_hours: { open_now: true },
     },
     {
-        id: '3',
-        name: 'Art Museum',
-        rating: 4.7,
-        user_ratings_total: 500,
-        price_level: 3,
-        vicinity: '789 Art Blvd, Cityville',
-        geometry: { location: { lat: 37.78725, lng: -122.4304 } },
+        id: 'ber-3',
+        name: 'Brauhaus 21',
+        rating: 4.4,
+        user_ratings_total: 320,
+        price_level: 2,
+        vicinity: 'Kreuzberg, Berlin',
+        geometry: { location: { lat: 52.5195, lng: 13.4010 } },
         photos: [],
-        types: ['museum', 'tourist_attraction'],
+        types: ['bar', 'restaurant'],
+        opening_hours: { open_now: true },
+    },
+    {
+        id: 'ber-4',
+        name: 'Skyview Terrace',
+        rating: 4.7,
+        user_ratings_total: 90,
+        price_level: 3,
+        vicinity: 'Alexanderplatz, Berlin',
+        geometry: { location: { lat: 52.5215, lng: 13.4095 } },
+        photos: [],
+        types: ['viewpoint', 'tourist_attraction'],
+        opening_hours: { open_now: true },
+    },
+    {
+        id: 'ber-5',
+        name: 'Urban Climb Center',
+        rating: 4.3,
+        user_ratings_total: 60,
+        price_level: 2,
+        vicinity: 'Prenzlauer Berg, Berlin',
+        geometry: { location: { lat: 52.5250, lng: 13.4120 } },
+        photos: [],
+        types: ['activity', 'indoor'],
+        opening_hours: { open_now: true },
+    },
+    {
+        id: 'ber-6',
+        name: 'Gallery Moderne',
+        rating: 4.5,
+        user_ratings_total: 240,
+        price_level: 2,
+        vicinity: 'Mitte, Berlin',
+        geometry: { location: { lat: 52.5179, lng: 13.4033 } },
+        photos: [],
+        types: ['museum', 'culture'],
         opening_hours: { open_now: false },
+    },
+    {
+        id: 'ber-7',
+        name: 'Sweet Treats',
+        rating: 4.2,
+        user_ratings_total: 80,
+        price_level: 1,
+        vicinity: 'Kreuzberg, Berlin',
+        geometry: { location: { lat: 52.5180, lng: 13.4078 } },
+        photos: [],
+        types: ['bakery', 'food'],
+        opening_hours: { open_now: true },
+    },
+    {
+        id: 'ber-8',
+        name: 'Green Meadow Park',
+        rating: 4.7,
+        user_ratings_total: 410,
+        price_level: 0,
+        vicinity: 'Tiergarten, Berlin',
+        geometry: { location: { lat: 52.5145, lng: 13.3501 } },
+        photos: [],
+        types: ['park', 'nature', 'walk'],
+        opening_hours: { open_now: true },
+    },
+    {
+        id: 'ber-9',
+        name: 'Indie Theater',
+        rating: 4.1,
+        user_ratings_total: 55,
+        price_level: 2,
+        vicinity: 'Friedrichshain, Berlin',
+        geometry: { location: { lat: 52.5201, lng: 13.4260 } },
+        photos: [],
+        types: ['theater', 'culture', 'indoor'],
+        opening_hours: { open_now: false },
+    },
+    {
+        id: 'ber-10',
+        name: 'Evening Jazz Club',
+        rating: 4.6,
+        user_ratings_total: 180,
+        price_level: 3,
+        vicinity: 'Mitte, Berlin',
+        geometry: { location: { lat: 52.5222, lng: 13.4048 } },
+        photos: [],
+        types: ['music', 'bar', 'indoor'],
+        opening_hours: { open_now: true },
     },
 ];
 
 export const fetchPlaces = async (lat: number, lng: number, radius: number = 5000, type: string = 'restaurant'): Promise<Place[]> => {
     // Simple in-memory cache to reduce duplicate requests during a session
     try {
-        const useMock = API_URL.includes('your-vercel-project');
-
+        const useMock = USE_MOCK_API || !API_URL || API_URL === '' || API_URL.includes('your-vercel-project');
         const round = (v: number) => Math.round(v * 1000) / 1000; // ~100m precision
         const key = `${round(lat)}|${round(lng)}|${radius}|${type}`;
 
@@ -90,20 +176,39 @@ export const fetchPlaces = async (lat: number, lng: number, radius: number = 500
         }
 
         if (useMock) {
-            console.log('Using mock data for places');
-            // Simulate network delay
-            await new Promise(resolve => setTimeout(resolve, 500));
-            const generated = MOCK_PLACES.map(p => ({
-                ...p,
-                geometry: {
-                    location: {
-                        lat: lat + (Math.random() - 0.5) * 0.01,
-                        lng: lng + (Math.random() - 0.5) * 0.01,
-                    }
+            // Offline mock filtering logic (no network calls)
+            console.log('MOCK MODE: fetchPlaces filtering locally');
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            // convert radius param (meters) to km
+            const radiusKm = Math.max(0.1, radius / 1000);
+
+            // haversine distance
+            const toRad = (v: number) => v * Math.PI / 180;
+            const distanceKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+                const R = 6371; // km
+                const dLat = toRad(lat2 - lat1);
+                const dLon = toRad(lon2 - lon1);
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            };
+
+            // Basic filter by type and distance
+            const filtered = MOCK_PLACES.filter(p => {
+                const d = distanceKm(lat, lng, p.geometry.location.lat, p.geometry.location.lng);
+                if (d > radiusKm) return false;
+                if (type && type !== 'point_of_interest') {
+                    // treat type as a keyword: match if any of p.types includes type or vice versa
+                    const t = type.toLowerCase();
+                    const has = (p.types || []).some((pt: string) => pt.toLowerCase().includes(t) || t.includes(pt.toLowerCase()));
+                    if (!has) return false;
                 }
-            }));
-            cache.set(key, { ts: Date.now(), data: generated });
-            return generated;
+                return true;
+            });
+
+            cache.set(key, { ts: Date.now(), data: filtered });
+            return filtered;
         }
 
         const url = `${API_URL}/places?lat=${lat}&lng=${lng}&radius=${radius}&type=${type}`;
@@ -136,29 +241,90 @@ export const generateDateIdeas = async (places: Place[], filters: any) => {
     if (entry && now - entry.ts < TTL) return entry.data;
 
     try {
-        const useMock = API_URL.includes('your-vercel-project');
+        const useMock = USE_MOCK_API || !API_URL || API_URL === '' || API_URL.includes('your-vercel-project');
         if (useMock) {
-            await new Promise(resolve => setTimeout(resolve, 800));
-            const mock = [
-                {
-                    title: "Dinner & Stroll",
-                    description: "Enjoy a lovely dinner at The Cozy Corner followed by a relaxing walk in Sunset Park.",
-                    placeIds: [places[0]?.id || '1', places[1]?.id || '2'].filter(Boolean),
-                    estimatedCost: "$$",
-                    duration: "2-3 hours"
-                },
-                {
-                    title: "Artistic Afternoon",
-                    description: "Explore a nearby museum and discuss your favorite pieces.",
-                    placeIds: [places[0]?.id || '3'].filter(Boolean),
-                    estimatedCost: "$$$",
-                    duration: "2 hours"
+            // Offline mock idea generation: pick 3 ideas based on filters and places
+            await new Promise(resolve => setTimeout(resolve, 200));
+
+            try {
+                const pool = (places && places.length > 0) ? places : MOCK_PLACES;
+                const pick = (arr: any[], n: number) => {
+                    const res: any[] = [];
+                    for (let i = 0; i < Math.min(n, arr.length); i++) res.push(arr[i]);
+                    return res;
+                };
+
+                // Derive intensity from mood/duration
+                const mood = (filters && filters.mood) ? String(filters.mood).toLowerCase() : '';
+                const duration = (filters && filters.duration) ? String(filters.duration).toLowerCase() : '';
+
+                const ideas: any[] = [];
+                // Idea 1: food + walk
+                const food = pool.find((p: any) => (p.types || []).some((t: string) => t.includes('food') || t.includes('cafe') || t.includes('bakery') || t.includes('restaurant')));
+                const walk = pool.find((p: any) => (p.types || []).some((t: string) => t.includes('park') || t.includes('walk') || t.includes('viewpoint')));
+                if (food && walk) {
+                    ideas.push({
+                        id: 'idea-1',
+                        title: `Dessert & Stroll at ${food.name}`,
+                        placeIds: [food.id, walk.id],
+                        description: `Start with a sweet treat at ${food.name}, then enjoy a relaxing walk at ${walk.name}. Perfect for a ${mood || 'chill'} mood.`,
+                        estimatedDuration: duration || '1-2 hours',
+                        estimatedBudget: filters && filters.budget ? filters.budget : (food.price_level >= 3 ? '$$$' : '$$'),
+                        intensity: mood === 'active' ? 'active' : 'chill',
+                    });
                 }
-            ];
-            cache.set(key, { ts: Date.now(), data: mock });
-            return mock;
+
+                // Idea 2: culture
+                const culture = pool.find((p: any) => (p.types || []).some((t: string) => t.includes('museum') || t.includes('culture') || t.includes('theater')));
+                if (culture) {
+                    ideas.push({
+                        id: 'idea-2',
+                        title: `Explore ${culture.name}`,
+                        placeIds: [culture.id],
+                        description: `Spend time at ${culture.name} and grab a coffee afterwards nearby. A nice option for ${mood || 'curious'} dates.`,
+                        estimatedDuration: '1-2 hours',
+                        estimatedBudget: filters && filters.budget ? filters.budget : '$$',
+                        intensity: 'normal',
+                    });
+                }
+
+                // Idea 3: activity
+                const activity = pool.find((p: any) => (p.types || []).some((t: string) => t.includes('activity') || t.includes('indoor') || t.includes('music') || t.includes('bar')));
+                if (activity) {
+                    ideas.push({
+                        id: 'idea-3',
+                        title: `${activity.name} Night`,
+                        placeIds: [activity.id],
+                        description: `Try something different at ${activity.name}. It's lively and great for a ${mood || 'fun'} outing.`,
+                        estimatedDuration: '2 hours',
+                        estimatedBudget: filters && filters.budget ? filters.budget : '$$',
+                        intensity: 'active',
+                    });
+                }
+
+                // Fill to 3-5 ideas if needed
+                const more = pick(pool.filter((p: any) => ![food?.id, walk?.id, culture?.id, activity?.id].includes(p.id)), 3 - ideas.length);
+                more.forEach((p: any, idx: number) => {
+                    ideas.push({
+                        id: `idea-auto-${idx}`,
+                        title: `Visit ${p.name}`,
+                        placeIds: [p.id],
+                        description: `Check out ${p.name} and enjoy the local vibes.`,
+                        estimatedDuration: '1-2 hours',
+                        estimatedBudget: '$$',
+                        intensity: 'normal',
+                    });
+                });
+
+                cache.set(key, { ts: Date.now(), data: ideas });
+                return ideas;
+            } catch (e) {
+                console.warn('Mock idea generation failed:', e);
+                return [];
+            }
         }
 
+        // Real backend path (not used in offline mock mode)
         const response = await fetch(`${API_URL}/ideas`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -176,8 +342,7 @@ export const generateDateIdeas = async (places: Place[], filters: any) => {
         return ideas;
     } catch (error) {
         console.error('Error generating ideas:', error);
-        // Bubble up error in real mode so UI can handle fallback and show a message
-        if (!API_URL.includes('your-vercel-project')) throw error;
+        if (!USE_MOCK_API && API_URL) throw error;
         return [];
     }
 };

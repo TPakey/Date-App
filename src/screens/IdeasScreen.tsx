@@ -133,7 +133,7 @@ export const IdeasScreen = () => {
                     )}
                 </TouchableOpacity>
 
-                {ideas.length > 0 && (
+                {ideas.length > 0 ? (
                     <View style={styles.resultsContainer}>
                         <Text style={styles.sectionTitle}>Suggestions</Text>
                         {ideas.map((idea, index) => (
@@ -143,11 +143,11 @@ export const IdeasScreen = () => {
                                 <View style={styles.ideaMeta}>
                                     <View style={styles.metaItem}>
                                         <Clock size={14} color={COLORS.textSecondary} />
-                                        <Text style={styles.metaText}>{idea.duration}</Text>
+                                        <Text style={styles.metaText}>{idea.duration || idea.estimatedDuration || ''}</Text>
                                     </View>
                                     <View style={styles.metaItem}>
                                         <DollarSign size={14} color={COLORS.textSecondary} />
-                                        <Text style={styles.metaText}>{idea.estimatedCost}</Text>
+                                        <Text style={styles.metaText}>{idea.estimatedCost || idea.estimatedBudget || ''}</Text>
                                     </View>
                                 </View>
                                 <View style={styles.actionRow}>
@@ -179,6 +179,13 @@ export const IdeasScreen = () => {
                             </View>
                         ))}
                     </View>
+                ) : (
+                    !loading && (
+                        <View style={styles.emptyContainer}>
+                            <Text style={styles.emptyTitle}>No suggestions yet</Text>
+                            <Text style={styles.emptyText}>Try changing filters and tap Generate.</Text>
+                        </View>
+                    )
                 )}
             </ScrollView>
         </View>
@@ -276,5 +283,23 @@ const styles = StyleSheet.create({
         color: '#FFF',
         fontWeight: '600',
         fontSize: 14,
+    },
+    emptyContainer: {
+        marginTop: SPACING.xl,
+        backgroundColor: COLORS.card,
+        padding: SPACING.m,
+        borderRadius: RADIUS.m,
+        alignItems: 'center',
+        ...SHADOWS.light,
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: COLORS.text,
+        marginBottom: SPACING.s,
+    },
+    emptyText: {
+        fontSize: 14,
+        color: COLORS.textSecondary,
     },
 });
