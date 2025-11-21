@@ -144,8 +144,8 @@ export const ExploreScreen = () => {
             {MapViewModule ? (
                 <MapViewModule
                     style={styles.map}
-                    showsUserLocation
-                    showsMyLocationButton
+                    showsUserLocation={true}
+                    showsMyLocationButton={true}
                     initialRegion={region || undefined}
                     onPress={() => setSelectedPlace(null)}
                 >
@@ -244,7 +244,7 @@ export const ExploreScreen = () => {
                 }}
             />
 
-            <Modal visible={!!selectedPlace} animationType="slide" transparent>
+            <Modal visible={!!selectedPlace} animationType="slide" transparent={true}>
                 {selectedPlace && (
                     <PlaceDetailSheet
                         place={selectedPlace}

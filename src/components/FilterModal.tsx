@@ -30,7 +30,7 @@ export const FilterModal = ({ visible, initialFilters = {}, onClose, onApply }: 
     }, [initialFilters, visible]);
 
     return (
-        <Modal visible={visible} animationType="slide" transparent>
+        <Modal visible={visible} animationType="slide" transparent={true}>
             <View style={styles.overlay}>
                 <View style={styles.sheet}>
                     <Text style={styles.title}>Filters</Text>
